@@ -1,0 +1,4 @@
+Foo north=Bar west=Baz south=Qu-ux
+Bar south=Foo west=Bee
+Food west=Bar south=Burzaco north=Gerli
+Gerli south=Food east=Bee
