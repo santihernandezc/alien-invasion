@@ -11,27 +11,28 @@ type cityDefinition struct {
 	neighborMap map[string]direction
 }
 
-// parseLine takes a string that defines a city and its roads.
-// Each line consists of a city name and up to four roads going out of it.
+// parseLine takes a string defining a city and its roads.
+// Each line consists of a city name and up to four roads going to neighbor cities.
 func parseLine(line string) (*cityDefinition, error) {
 	line = strings.TrimSpace(line)
 	if line == "" {
 		return nil, fmt.Errorf("invalid input: empty string")
 	}
 
-	citySlice := strings.Split(line, " ")
+	elements := strings.Split(line, " ")
 	// If there are more than 5 segments, it's an invalid definition.
-	if len(citySlice) < 1 || len(citySlice) > 5 {
-		return nil, fmt.Errorf("invalid number of segments: %d", len(citySlice))
+	numElements := len(elements)
+	if numElements > 5 {
+		return nil, fmt.Errorf("invalid number of segments: %d", numElements)
 	}
 
 	var neighbors []string
-	neighborMap := make(map[string]direction, len(citySlice)-1)
-	for _, rawEdges := range citySlice[1:] {
+	neighborMap := make(map[string]direction, numElements-1)
+	for _, dirCityPair := range elements[1:] {
 		// Edges should be defined in "direction=city" pairs.
-		edgeSlice := strings.Split(rawEdges, "=")
+		edgeSlice := strings.Split(dirCityPair, "=")
 		if len(edgeSlice) != 2 {
-			return nil, fmt.Errorf("invalid road definition: %q", rawEdges)
+			return nil, fmt.Errorf("invalid road definition: %q", dirCityPair)
 		}
 
 		// Convert to direction type and check if it's valid
@@ -46,7 +47,7 @@ func parseLine(line string) (*cityDefinition, error) {
 	}
 
 	return &cityDefinition{
-		name:        citySlice[0],
+		name:        elements[0],
 		neighbors:   neighbors,
 		neighborMap: neighborMap,
 	}, nil

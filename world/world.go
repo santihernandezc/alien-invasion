@@ -46,74 +46,64 @@ func NewFromReader(reader io.Reader, isDirected bool) (*World, error) {
 }
 
 func (w *World) addCityAndRoads(cityDef *cityDefinition) {
-	// Create or retrieve city, name must be unique.
+	// Create or retrieve city, name must be unique
 	cityFrom, ok := w.Cities[cityDef.name]
 	if !ok {
 		cityFrom = &City{
 			Name:        cityDef.name,
 			neighborMap: make(map[*City]direction, maxRoads),
 		}
+		// Add newly created city to World
+		w.Cities[cityFrom.Name] = cityFrom
 	}
 
-	// Add roads to the city
+	// Add roads to neighbor cities
 	for _, neighborName := range cityDef.neighbors {
+		// Define directions both ways
+		cityToNeighborDir := cityDef.neighborMap[neighborName]
+		neighborToCityDir := oppositeDirectionMap[cityToNeighborDir]
+
 		cityTo, ok := w.Cities[neighborName]
 		if !ok {
 			// If the neighbor city hasn't been created yet,
-			// create it and add it to the list.
+			// create it and add it to the World before proceeding.
 			cityTo = &City{
 				Name:        neighborName,
 				neighborMap: make(map[*City]direction, maxRoads),
 			}
 			w.Cities[neighborName] = cityTo
+		}
+
+		// Append to city neighbors only if it's not already there
+		if _, ok := cityFrom.neighborMap[cityTo]; !ok {
+			cityFrom.Neighbors = append(cityFrom.Neighbors, cityTo)
+			cityFrom.neighborMap[cityTo] = cityToNeighborDir
+
 			// If the graph is non-directed, make the connection bi-directional
 			if !w.directed {
 				cityTo.Neighbors = append(cityTo.Neighbors, cityFrom)
-				cityTo.neighborMap[cityFrom] = oppositeDirectionMap[cityDef.neighborMap[cityTo.Name]]
+				cityTo.neighborMap[cityFrom] = neighborToCityDir
 			}
-			cityFrom.Neighbors = append(cityFrom.Neighbors, cityTo)
-			cityFrom.neighborMap[cityTo] = cityDef.neighborMap[cityTo.Name]
-			continue
-		}
-
-		// If the city already exists,
-		// append to neighbors list only if it's not already there
-		var alreadyNeighbor bool
-		for _, n := range cityFrom.Neighbors {
-			if n == cityTo {
-				alreadyNeighbor = true
-			}
-		}
-
-		if !alreadyNeighbor {
-			if !w.directed {
-				cityTo.Neighbors = append(cityTo.Neighbors, cityFrom)
-				cityTo.neighborMap[cityFrom] = oppositeDirectionMap[cityDef.neighborMap[cityTo.Name]]
-			}
-			cityFrom.Neighbors = append(cityFrom.Neighbors, cityTo)
-			cityFrom.neighborMap[cityTo] = cityDef.neighborMap[cityTo.Name]
 		}
 	}
-
-	// Add newly created City
-	w.Cities[cityFrom.Name] = cityFrom
 }
 
+// DeleteCityAndRoads removes a city and all its edges from the World.
 func (w *World) DeleteCityAndRoads(city *City) {
-	// Delete City from world map
+	// Delete City from the World's City map
 	delete(w.Cities, city.Name)
 
 	// If it's not a directed graph, delete all roads to the city
-	// from its neighbors' adjacency list
+	// from its neighbors' adjacency lists
 	if !w.directed {
 		for _, neighbor := range city.Neighbors {
 			newNeighbors := make([]*City, 0, len(neighbor.Neighbors)-1)
-
 			for _, nn := range neighbor.Neighbors {
 				if nn != city {
 					newNeighbors = append(newNeighbors, nn)
 				}
 			}
+
 			neighbor.Neighbors = newNeighbors
 			delete(neighbor.neighborMap, city)
 		}
@@ -123,7 +113,6 @@ func (w *World) DeleteCityAndRoads(city *City) {
 	// If it's directed, we have to check node by node
 	// and delete every reference to the city
 	for _, c := range w.Cities {
-		delete(c.neighborMap, city)
 		newNeighbors := make([]*City, 0, len(c.Neighbors))
 		for _, n := range c.Neighbors {
 			if n != city {
@@ -133,11 +122,13 @@ func (w *World) DeleteCityAndRoads(city *City) {
 
 		if len(newNeighbors) != len(c.Neighbors) {
 			c.Neighbors = newNeighbors
+			delete(c.neighborMap, city)
 		}
 	}
-
 }
 
+// String returns the string representation of the World
+// using the same format as the input file.
 func (w *World) String() string {
 	var builder strings.Builder
 	for _, city := range w.Cities {
