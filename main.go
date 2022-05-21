@@ -26,7 +26,7 @@ func main() {
 	log := log.New(os.Stdout, "", 0)
 
 	// Read and parse file into World map.
-	log.Printf("Initializing world from file with path %q", *path)
+	log.Printf("Initializing world from file %q", *path)
 	file, err := os.Open(*path)
 	if err != nil {
 		log.Fatalf("Error opening file in path %s: %v", *path, err)
@@ -38,7 +38,7 @@ func main() {
 		log.Fatalf("Error reading and parsing file: %v", err)
 	}
 
-	// Make aliens
+	// Instantiate aliens and seed randomness
 	log.Printf("Initializing %d aliens", *n)
 	rngSeed := time.Now().UnixNano()
 	ao, err := alien.NewOrchestrator(*n, rngSeed, worldMap, log)
@@ -51,7 +51,7 @@ func main() {
 	ao.UnleashAliens(*movements)
 
 	worldString := worldMap.String()
-	log.Print("Simulation done, this is what's left of the world...\n", worldString)
+	log.Print("Simulation done, this is what's left of the world...\n\n", worldString)
 
 	if *o != "" {
 		os.WriteFile(*o, []byte(worldMap.String()), 0777)
