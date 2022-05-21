@@ -56,3 +56,18 @@ You can run the simulation with `go run main.go` using the following flags:
 -o string
     path to the output file (optional)
 ```
+
+Note: if the simulation is run using a non-directed graph, conflicting directions may be overwritten to allow for bi-directional roads.
+
+```
+Bar south=Baz
+Foo north=Bar east=Baz
+```
+
+In this example we have two conflicting routes: `Bar south=Baz` and `Foo north=Bar`. The final graph would result in something like this:
+
+```
+Bar south=Foo north=Baz
+Foo north=Bar east=Baz
+Baz west=Foo
+```
