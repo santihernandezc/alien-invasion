@@ -17,38 +17,51 @@ var (
 
 func TestNewOrchestrator(t *testing.T) {
 	tests := []struct {
-		name string
-		w    *world.World
-		n    int
-		err  string
+		name   string
+		w      *world.World
+		logger *log.Logger
+		n      int
+		err    string
 	}{
 		{
 			"nil world",
 			nil,
+			nopLogger,
 			0,
 			"invalid World value: <nil>",
 		},
 		{
+			"nil logger",
+			&testWorld,
+			nil,
+			0,
+			"invalid value for logger: <nil>",
+		},
+		{
 			"empty world",
 			&world.World{},
+			nopLogger,
 			0,
 			"invalid World value: 0 cities",
 		},
 		{
 			"5 aliens",
 			&testWorld,
+			nopLogger,
 			5,
 			"",
 		},
 		{
 			"100 aliens",
 			&testWorld,
+			nopLogger,
 			100,
 			"",
 		},
 		{
 			"10000 aliens",
 			&testWorld,
+			nopLogger,
 			10000,
 			"",
 		},
@@ -56,7 +69,7 @@ func TestNewOrchestrator(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(tt *testing.T) {
-			ao, err := NewOrchestrator(test.n, 0, test.w, nopLogger)
+			ao, err := NewOrchestrator(test.n, 0, test.w, test.logger)
 			if test.err != "" {
 				assert.EqualError(tt, err, test.err)
 				return

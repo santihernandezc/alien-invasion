@@ -8,40 +8,51 @@ import (
 	"github.com/santihernandezc/alien-invasion/world"
 )
 
+// AlienOrchestrator is in charge of managing the state and behavior of aliens.
+// It contains the main logic to run and stop the simulation.
 type AlienOrchestrator struct {
-	Aliens    []*Alien
-	positions map[string][]*Alien
+	Aliens []*Alien
+
+	// positions maps a city name with the aliens in that city
 	world     *world.World
+	positions map[string][]*Alien
 	log       *log.Logger
 }
 
 func NewOrchestrator(amount int, rngSeed int64, w *world.World, log *log.Logger) (*AlienOrchestrator, error) {
 	// Prevent panics
 	if w == nil {
-		return nil, fmt.Errorf("invalid World value: %v", w)
+		return nil, fmt.Errorf("invalid World value: <nil>")
 	}
-	if len(w.Cities) < 1 {
-		return nil, fmt.Errorf("invalid World value: %d cities", len(w.Cities))
+	if log == nil {
+		return nil, fmt.Errorf("invalid value for logger: <nil>")
+	}
+	if len(w.Cities) == 0 {
+		return nil, fmt.Errorf("invalid World value: 0 cities")
 	}
 
 	alienOrchestrator := AlienOrchestrator{
 		Aliens:    make([]*Alien, 0, amount),
-		positions: make(map[string][]*Alien),
+		positions: make(map[string][]*Alien, len(w.Cities)),
 		world:     w,
 		log:       log,
 	}
 
+	// Make a slice to choose random cities as starting positions
 	var cities []*world.City
 	for _, city := range w.Cities {
 		cities = append(cities, city)
 	}
 
+	// To make things more random-like, use the seed
 	rand.Seed(rngSeed)
-	// Choose a random city for each alien
-	for i := 0; i < amount; i++ {
+
+	// Choose a random city for each alien.
+	// Start from 1 instead of 0 to use the same value for the alien's ID.
+	for i := 1; i <= amount; i++ {
 		city := cities[rand.Intn(len(cities))]
 		alien := Alien{
-			ID:       i + 1,
+			ID:       i,
 			Position: city,
 		}
 		alienOrchestrator.Aliens = append(alienOrchestrator.Aliens, &alien)
@@ -86,8 +97,7 @@ func (ao *AlienOrchestrator) UnleashAliens(maxMovements int) {
 				ao.log.Printf("💥 %s has been destroyed by Alien %d and Alien %d", newPos, alien.ID, rivalAliens[0].ID)
 
 				// Since the city is destroyed, other aliens can't go to or through it
-				aliensToEliminate := []*Alien{alien}
-				aliensToEliminate = append(aliensToEliminate, rivalAliens...)
+				aliensToEliminate := append(rivalAliens, alien)
 
 				if len(rivalAliens) > 1 {
 					for _, ra := range rivalAliens[1:] {
@@ -107,14 +117,16 @@ func (ao *AlienOrchestrator) UnleashAliens(maxMovements int) {
 
 func (ao *AlienOrchestrator) deleteAliens(aliens []*Alien) {
 	aliensToDelete := make(map[*Alien]struct{}, len(aliens))
+
+	// First, check if the aliens are already in deleted state
 	for _, alien := range aliens {
-		// First, check if the alien is currently deleted
 		if !alien.isDeleted {
 			aliensToDelete[alien] = struct{}{}
 			alien.isDeleted = true
 		}
 	}
 
+	// Make a slice with the aliens that are still active
 	remainingAliens := make([]*Alien, 0, len(ao.Aliens)-len(aliensToDelete))
 	for _, alien := range ao.Aliens {
 		if _, ok := aliensToDelete[alien]; !ok {
@@ -126,7 +138,8 @@ func (ao *AlienOrchestrator) deleteAliens(aliens []*Alien) {
 }
 
 func (ao *AlienOrchestrator) removeAlienFromCity(prevCity string, alien *Alien) {
-	var newPositionSlice []*Alien
+	// Filter out the alien from the slice corresponding to the previous city
+	newPositionSlice := make([]*Alien, 0, len(ao.positions)-1)
 	for _, a := range ao.positions[prevCity] {
 		if a.ID != alien.ID {
 			newPositionSlice = append(newPositionSlice, a)

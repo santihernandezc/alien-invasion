@@ -12,7 +12,7 @@ type Alien struct {
 	isDeleted bool
 }
 
-func (a *Alien) move() bool {
+func (a *Alien) move() (ok bool) {
 	// Check whether the alien is trapped
 	neighbors := a.Position.Neighbors
 	if len(neighbors) < 1 {

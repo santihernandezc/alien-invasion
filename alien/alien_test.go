@@ -83,5 +83,4 @@ func TestMove(t *testing.T) {
 			assert.Contains(tt, test.possibleCities, test.alien.Position.Name)
 		})
 	}
-
 }
