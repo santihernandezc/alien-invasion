@@ -1,4 +1,12 @@
-Foo north=Bar west=Baz south=Qu-ux
-Bar south=Foo west=Bee
-Food west=Bar south=Burzaco north=Gerli
-Gerli south=Food east=Bee
+Burzaco north=Llavallol west=SanJusto south=Claypole
+Bernal south=Quilmes north=DockSud
+Gerli west=Hurlingham south=Lanús north=Avellaneda
+Morón north=Hurlingham east=Lanús
+Temperley north=Banfield east=Bernal
+Banfield north=Escalada south=Temperley west=Morón
+Moreno east=Burzaco north=Morón
+Llavallol south=Burzaco
+DockSud south=Bernal west=Lanús
+Lanús east=DockSud north=Gerli south=Escalada
+Claypole north=Burzaco east=Quilmes west=Moreno
+Quilmes west=Claypole north=Bernal
