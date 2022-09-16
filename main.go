@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	path      = flag.String("path", "config.txt", "path to the config file")
+	path      = flag.String("path", "config.json", "path to the json config file")
 	n         = flag.Int("n", 5, "number of aliens for the simulation")
 	movements = flag.Int("movements", 10000, "how many iterations this simulation is going to run")
 	directed  = flag.Bool("directed", false, "use a directed graph")
@@ -32,13 +32,12 @@ func main() {
 
 	// Read and parse file into World map.
 	log.Printf("Initializing world from file %q", *path)
-	file, err := os.Open(*path)
+	b, err := os.ReadFile(*path)
 	if err != nil {
 		log.Fatalf("Error opening file in path %s: %v", *path, err)
 	}
-	defer file.Close()
 
-	worldMap, err := world.NewFromReader(file, *directed, 800, 450)
+	worldMap, err := world.NewFromBytes(b, *directed, 800, 450)
 	if err != nil {
 		log.Fatalf("Error reading and parsing file: %v", err)
 	}

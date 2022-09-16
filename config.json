@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Burzaco",
+    "neighbors": ["Llavallol", "SanJusto", "Claypole"]
+  },
+  {
+    "name": "Bernal",
+    "neighbors": ["Quilmes", "DockSud"]
+  },
+  {
+    "name": "Gerli",
+    "neighbors": ["Hurlingham", "Lanús", "Avellaneda"]
+  },
+  {
+    "name": "Morón",
+    "neighbors": ["Hurlingham", "Lanús"]
+  },
+  {
+    "name": "Temperley",
+    "neighbors": ["Banfield", "Bernal"]
+  },
+  {
+    "name": "Banfield",
+    "neighbors": ["Escalada", "Temperley", "Morón"]
+  },
+  {
+    "name": "Moreno",
+    "neighbors": ["Burzaco", "Morón"]
+  },
+  {
+    "name": "Llavallol",
+    "neighbors": ["Burzaco"]
+  },
+  {
+    "name": "DockSud",
+    "neighbors": ["Bernal", "Lanús"]
+  },
+  {
+    "name": "Lanús",
+    "neighbors": ["DockSud", "Gerli", "Escalada"]
+  },
+  {
+    "name": "Claypole",
+    "neighbors": ["Burzaco", "Quilmes", "Moreno"]
+  },
+  {
+    "name": "Quilmes",
+    "neighbors": ["Claypole", "Bernal"]
+  }
+]

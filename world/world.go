@@ -1,9 +1,8 @@
 package world
 
 import (
-	"bufio"
+	"encoding/json"
 	"fmt"
-	"io"
 	"math/rand"
 	"strings"
 )
@@ -19,6 +18,12 @@ type position struct {
 	Y int32
 }
 
+type cityDefinition struct {
+	Name        string   `json:"name"`
+	Neighbors   []string `json:"neighbors"`
+	neighborMap map[string]direction
+}
+
 // City is an edge on the graph.
 type City struct {
 	Name        string
@@ -27,26 +32,21 @@ type City struct {
 	Position    position
 }
 
-// NewFromReader returns a new World based on the contents of an io.Reader.
-func NewFromReader(reader io.Reader, isDirected bool, width int32, height int32) (*World, error) {
+// NewFromBytes returns a new World based on raw bytes.
+func NewFromBytes(b []byte, isDirected bool, width int32, height int32) (*World, error) {
 	world := World{
 		Cities:   make(map[string]*City),
 		directed: isDirected,
 	}
 
-	scanner := bufio.NewScanner(reader)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if line == "" {
-			continue
-		}
-		// Parse city and roads from each file line
-		cityDef, err := parseLine(scanner.Text())
-		if err != nil {
-			return nil, fmt.Errorf("error parsing line: %w", err)
-		}
+	// Parse city and roads from each file line
+	var cityDefs []cityDefinition
+	if err := json.Unmarshal(b, &cityDefs); err != nil {
+		return nil, fmt.Errorf("error unmarshaling bytes: %w", err)
+	}
 
-		world.addCityAndRoads(cityDef, width, height)
+	for _, cityDef := range cityDefs {
+		world.addCityAndRoads(&cityDef, width, height)
 	}
 
 	return &world, nil
@@ -54,14 +54,14 @@ func NewFromReader(reader io.Reader, isDirected bool, width int32, height int32)
 
 func (w *World) addCityAndRoads(cityDef *cityDefinition, width int32, height int32) {
 	// Create or retrieve city, name must be unique
-	cityFrom, ok := w.Cities[cityDef.name]
+	cityFrom, ok := w.Cities[cityDef.Name]
 	if !ok {
 		cityFrom = &City{
 			Position: position{
 				X: rand.Int31n(width-100) + 50,
 				Y: rand.Int31n(height-100) + 50,
 			},
-			Name:        cityDef.name,
+			Name:        cityDef.Name,
 			neighborMap: make(map[*City]direction, maxRoads),
 		}
 		// Add newly created city to World
@@ -69,7 +69,7 @@ func (w *World) addCityAndRoads(cityDef *cityDefinition, width int32, height int
 	}
 
 	// Add roads to neighbor cities
-	for _, neighborName := range cityDef.neighbors {
+	for _, neighborName := range cityDef.Neighbors {
 		// Define directions both ways
 		cityToNeighborDir := cityDef.neighborMap[neighborName]
 		neighborToCityDir := oppositeDirectionMap[cityToNeighborDir]
