@@ -42,15 +42,6 @@ func main() {
 		log.Fatalf("Error reading and parsing file: %v", err)
 	}
 
-	// Instantiate aliens and seed randomness
-	log.Printf("Initializing %d aliens", *n)
-	rngSeed := time.Now().UnixNano()
-	ao, err := alien.NewOrchestrator(*n, rngSeed, worldMap, log)
-	if err != nil {
-		log.Fatalf("error creating aliens: %v", err)
-	}
-	var counter int
-
 	// Init window
 	rl.InitWindow(800, 450, "Alien Invasion")
 	rl.SetTargetFPS(60)
@@ -62,18 +53,32 @@ func main() {
 	alienTexture.Height = int32(float32(alienTexture.Height) * 0.2)
 	rl.UnloadImage(alienImg)
 
+	// Instantiate aliens and seed randomness
+	log.Printf("Initializing %d aliens", *n)
+	rngSeed := time.Now().UnixNano()
+	ao, err := alien.NewOrchestrator(*n, rngSeed, worldMap, alienTexture, log)
+	if err != nil {
+		log.Fatalf("error creating aliens: %v", err)
+	}
+	var counter int
+
 	// Draw
 	for !rl.WindowShouldClose() {
 		rl.BeginDrawing()
 		rl.ClearBackground(rl.RayWhite)
 		rl.DrawText(fmt.Sprintf("%f", rl.GetFPS()), 10, 10, 20, rl.Black)
 		drawMap(worldMap)
-		drawAliens(ao.Aliens, alienTexture)
+
+		for _, alien := range ao.Aliens {
+			if rl.Vector2Distance(alien.Position, alien.NextPosition) != 0 {
+				alien.Position = rl.Vector2Add(alien.Position, rl.Vector2Scale(rl.Vector2Subtract(alien.NextPosition, alien.Position), 0.1))
+			}
+			alien.Draw()
+		}
 		rl.EndDrawing()
 
 		if rl.IsKeyReleased(32) {
 			if len(ao.Aliens) >= 1 {
-				fmt.Println("counter:", counter)
 				ao.Step(ao.Aliens[counter%len(ao.Aliens)])
 				counter++
 			}
@@ -95,20 +100,12 @@ func main() {
 	// }
 }
 
-func drawAliens(aliens []*alien.Alien, texture rl.Texture2D) {
-	for _, alien := range aliens {
-		x := alien.Position.Position.X
-		y := alien.Position.Position.Y
-		rl.DrawTexture(texture, x-texture.Width/2, y-texture.Height/2, rl.White)
-	}
-}
-
 func drawMap(worldMap *world.World) {
 	for _, city := range worldMap.Cities {
-		rl.DrawText(city.Name, city.Position.X+10, city.Position.Y+10, 10, rl.Black)
-		rl.DrawCircleLines(city.Position.X, city.Position.Y, 10, rl.Black)
+		rl.DrawText(city.Name, int32(city.Position.X)+10, int32(city.Position.Y)+10, 10, rl.Black)
+		rl.DrawCircleLines(int32(city.Position.X), int32(city.Position.Y), 10, rl.Black)
 		for _, neighbor := range city.Neighbors {
-			rl.DrawLine(city.Position.X, city.Position.Y, neighbor.Position.X, neighbor.Position.Y, rl.Gray)
+			rl.DrawLine(int32(city.Position.X), int32(city.Position.Y), int32(neighbor.Position.X), int32(neighbor.Position.Y), rl.Gray)
 		}
 	}
 }

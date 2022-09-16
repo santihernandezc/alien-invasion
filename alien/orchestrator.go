@@ -5,6 +5,7 @@ import (
 	"log"
 	"math/rand"
 
+	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/santihernandezc/alien-invasion/world"
 )
 
@@ -19,7 +20,7 @@ type AlienOrchestrator struct {
 	log       *log.Logger
 }
 
-func NewOrchestrator(amount int, rngSeed int64, w *world.World, log *log.Logger) (*AlienOrchestrator, error) {
+func NewOrchestrator(amount int, rngSeed int64, w *world.World, alienTexture rl.Texture2D, log *log.Logger) (*AlienOrchestrator, error) {
 	// Prevent panics
 	if w == nil {
 		return nil, fmt.Errorf("invalid World value: <nil>")
@@ -52,8 +53,11 @@ func NewOrchestrator(amount int, rngSeed int64, w *world.World, log *log.Logger)
 	for i := 1; i <= amount; i++ {
 		city := cities[rand.Intn(len(cities))]
 		alien := Alien{
-			ID:       i,
-			Position: city,
+			ID:           i,
+			City:         city,
+			Position:     rl.NewVector2(float32(city.Position.X), float32(city.Position.Y)),
+			NextPosition: rl.NewVector2(float32(city.Position.X), float32(city.Position.Y)),
+			Texture:      alienTexture,
 		}
 		alienOrchestrator.Aliens = append(alienOrchestrator.Aliens, &alien)
 		alienOrchestrator.positions[city.Name] = append(alienOrchestrator.positions[city.Name], &alien)
@@ -76,15 +80,15 @@ func (ao *AlienOrchestrator) UnleashAliens(maxMovements int) {
 			}
 
 			// Make the alien move
-			prevPos := alien.Position.Name
+			prevPos := alien.City.Name
 			if ok := alien.move(); !ok {
-				ao.log.Printf("🚷 Alien %d is trapped forever in %s", alien.ID, alien.Position.Name)
+				ao.log.Printf("🚷 Alien %d is trapped forever in %s", alien.ID, alien.City.Name)
 				ao.deleteAliens([]*Alien{alien})
 				continue
 			}
 
 			// Remove it from the city it was previously in
-			newPos := alien.Position.Name
+			newPos := alien.City.Name
 			ao.removeAlienFromCity(prevPos, alien)
 			ao.log.Printf("👾 Alien %d moved from %s to %s", alien.ID, prevPos, newPos)
 
@@ -93,7 +97,7 @@ func (ao *AlienOrchestrator) UnleashAliens(maxMovements int) {
 			if ok && len(rivalAliens) > 0 {
 				// If two aliens find each other, the city gets destroyed and the aliens die.
 				ao.log.Printf("👀 Alien %d found Alien %d in %s", alien.ID, rivalAliens[0].ID, newPos)
-				ao.world.DeleteCityAndRoads(alien.Position)
+				ao.world.DeleteCityAndRoads(alien.City)
 				ao.log.Printf("💥 %s has been destroyed by Alien %d and Alien %d", newPos, alien.ID, rivalAliens[0].ID)
 
 				// Since the city is destroyed, other aliens can't go to or through it
@@ -101,7 +105,7 @@ func (ao *AlienOrchestrator) UnleashAliens(maxMovements int) {
 
 				if len(rivalAliens) > 1 {
 					for _, ra := range rivalAliens[1:] {
-						ao.log.Printf("🚷 Alien %d is trapped forever in the ruins of %s", ra.ID, alien.Position.Name)
+						ao.log.Printf("🚷 Alien %d is trapped forever in the ruins of %s", ra.ID, alien.City.Name)
 					}
 				}
 
@@ -121,15 +125,15 @@ func (ao *AlienOrchestrator) Step(alien *Alien) {
 	}
 
 	// Make the alien move
-	prevPos := alien.Position.Name
+	prevPos := alien.City.Name
 	if ok := alien.move(); !ok {
-		ao.log.Printf("🚷 Alien %d is trapped forever in %s", alien.ID, alien.Position.Name)
+		ao.log.Printf("🚷 Alien %d is trapped forever in %s", alien.ID, alien.City.Name)
 		ao.deleteAliens([]*Alien{alien})
 		return
 	}
 
 	// Remove it from the city it was previously in
-	newPos := alien.Position.Name
+	newPos := alien.City.Name
 	ao.removeAlienFromCity(prevPos, alien)
 	ao.log.Printf("👾 Alien %d moved from %s to %s", alien.ID, prevPos, newPos)
 
@@ -138,7 +142,7 @@ func (ao *AlienOrchestrator) Step(alien *Alien) {
 	if ok && len(rivalAliens) > 0 {
 		// If two aliens find each other, the city gets destroyed and the aliens die.
 		ao.log.Printf("👀 Alien %d found Alien %d in %s", alien.ID, rivalAliens[0].ID, newPos)
-		ao.world.DeleteCityAndRoads(alien.Position)
+		ao.world.DeleteCityAndRoads(alien.City)
 		ao.log.Printf("💥 %s has been destroyed by Alien %d and Alien %d", newPos, alien.ID, rivalAliens[0].ID)
 
 		// Since the city is destroyed, other aliens can't go to or through it
@@ -146,7 +150,7 @@ func (ao *AlienOrchestrator) Step(alien *Alien) {
 
 		if len(rivalAliens) > 1 {
 			for _, ra := range rivalAliens[1:] {
-				ao.log.Printf("🚷 Alien %d is trapped forever in the ruins of %s", ra.ID, alien.Position.Name)
+				ao.log.Printf("🚷 Alien %d is trapped forever in the ruins of %s", ra.ID, alien.City.Name)
 			}
 		}
 

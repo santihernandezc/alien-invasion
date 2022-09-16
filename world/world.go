@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
+
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 // World is a graph with interconnected cities.
@@ -29,7 +31,7 @@ type City struct {
 	Name        string
 	Neighbors   []*City
 	neighborMap map[*City]direction
-	Position    position
+	Position    rl.Vector2
 }
 
 // NewFromBytes returns a new World based on raw bytes.
@@ -57,10 +59,7 @@ func (w *World) addCityAndRoads(cityDef *cityDefinition, width int32, height int
 	cityFrom, ok := w.Cities[cityDef.Name]
 	if !ok {
 		cityFrom = &City{
-			Position: position{
-				X: rand.Int31n(width-100) + 50,
-				Y: rand.Int31n(height-100) + 50,
-			},
+			Position:    rl.NewVector2(rand.Float32()*float32(width-100)+50, rand.Float32()*float32(height-100)+50),
 			Name:        cityDef.Name,
 			neighborMap: make(map[*City]direction, maxRoads),
 		}
@@ -79,10 +78,7 @@ func (w *World) addCityAndRoads(cityDef *cityDefinition, width int32, height int
 			// If the neighbor city hasn't been created yet,
 			// create it and add it to the World before proceeding.
 			cityTo = &City{
-				Position: position{
-					X: rand.Int31n(width-100) + 50,
-					Y: rand.Int31n(height-100) + 50,
-				},
+				Position:    rl.NewVector2(rand.Float32()*float32(width-100)+50, rand.Float32()*float32(height-100)+50),
 				Name:        neighborName,
 				neighborMap: make(map[*City]direction, maxRoads),
 			}
