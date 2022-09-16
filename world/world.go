@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"math/rand"
 	"strings"
 )
 
@@ -13,15 +14,21 @@ type World struct {
 	directed bool
 }
 
+type position struct {
+	X int32
+	Y int32
+}
+
 // City is an edge on the graph.
 type City struct {
 	Name        string
 	Neighbors   []*City
 	neighborMap map[*City]direction
+	Position    position
 }
 
 // NewFromReader returns a new World based on the contents of an io.Reader.
-func NewFromReader(reader io.Reader, isDirected bool) (*World, error) {
+func NewFromReader(reader io.Reader, isDirected bool, width int32, height int32) (*World, error) {
 	world := World{
 		Cities:   make(map[string]*City),
 		directed: isDirected,
@@ -39,17 +46,21 @@ func NewFromReader(reader io.Reader, isDirected bool) (*World, error) {
 			return nil, fmt.Errorf("error parsing line: %w", err)
 		}
 
-		world.addCityAndRoads(cityDef)
+		world.addCityAndRoads(cityDef, width, height)
 	}
 
 	return &world, nil
 }
 
-func (w *World) addCityAndRoads(cityDef *cityDefinition) {
+func (w *World) addCityAndRoads(cityDef *cityDefinition, width int32, height int32) {
 	// Create or retrieve city, name must be unique
 	cityFrom, ok := w.Cities[cityDef.name]
 	if !ok {
 		cityFrom = &City{
+			Position: position{
+				X: rand.Int31n(width-100) + 50,
+				Y: rand.Int31n(height-100) + 50,
+			},
 			Name:        cityDef.name,
 			neighborMap: make(map[*City]direction, maxRoads),
 		}
@@ -68,6 +79,10 @@ func (w *World) addCityAndRoads(cityDef *cityDefinition) {
 			// If the neighbor city hasn't been created yet,
 			// create it and add it to the World before proceeding.
 			cityTo = &City{
+				Position: position{
+					X: rand.Int31n(width-100) + 50,
+					Y: rand.Int31n(height-100) + 50,
+				},
 				Name:        neighborName,
 				neighborMap: make(map[*City]direction, maxRoads),
 			}

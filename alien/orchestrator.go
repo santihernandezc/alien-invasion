@@ -112,7 +112,49 @@ func (ao *AlienOrchestrator) UnleashAliens(maxMovements int) {
 			ao.addAlienToCity(newPos, alien)
 		}
 	}
+}
 
+func (ao *AlienOrchestrator) Step(alien *Alien) {
+	// Check if the alien was killed or stuck in the current loop
+	if alien.isDeleted {
+		return
+	}
+
+	// Make the alien move
+	prevPos := alien.Position.Name
+	if ok := alien.move(); !ok {
+		ao.log.Printf("🚷 Alien %d is trapped forever in %s", alien.ID, alien.Position.Name)
+		ao.deleteAliens([]*Alien{alien})
+		return
+	}
+
+	// Remove it from the city it was previously in
+	newPos := alien.Position.Name
+	ao.removeAlienFromCity(prevPos, alien)
+	ao.log.Printf("👾 Alien %d moved from %s to %s", alien.ID, prevPos, newPos)
+
+	// Check if there's another alien in the new position
+	rivalAliens, ok := ao.positions[newPos]
+	if ok && len(rivalAliens) > 0 {
+		// If two aliens find each other, the city gets destroyed and the aliens die.
+		ao.log.Printf("👀 Alien %d found Alien %d in %s", alien.ID, rivalAliens[0].ID, newPos)
+		ao.world.DeleteCityAndRoads(alien.Position)
+		ao.log.Printf("💥 %s has been destroyed by Alien %d and Alien %d", newPos, alien.ID, rivalAliens[0].ID)
+
+		// Since the city is destroyed, other aliens can't go to or through it
+		aliensToEliminate := append(rivalAliens, alien)
+
+		if len(rivalAliens) > 1 {
+			for _, ra := range rivalAliens[1:] {
+				ao.log.Printf("🚷 Alien %d is trapped forever in the ruins of %s", ra.ID, alien.Position.Name)
+			}
+		}
+
+		ao.deleteCityAndAliens(aliensToEliminate, newPos)
+	}
+
+	// After checking for other aliens, add alien to city
+	ao.addAlienToCity(newPos, alien)
 }
 
 func (ao *AlienOrchestrator) deleteAliens(aliens []*Alien) {

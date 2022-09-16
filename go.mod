@@ -2,7 +2,10 @@ module github.com/santihernandezc/alien-invasion
 
 go 1.17
 
-require github.com/stretchr/testify v1.7.1
+require (
+	github.com/gen2brain/raylib-go/raylib v0.0.0-20220829124729-25ea53bfbb90
+	github.com/stretchr/testify v1.7.1
+)
 
 require (
 	github.com/davecgh/go-spew v1.1.0 // indirect
