@@ -65,10 +65,9 @@ func main() {
 
 	var counter int
 
-	tickSignal := make(chan bool)
-	keySignal := make(chan bool)
-	go tick(tickSignal)
-	go listener(keySignal)
+	stepSignal := make(chan bool)
+	go tick(stepSignal)
+	go listener(stepSignal)
 
 	// Draw
 	for !rl.WindowShouldClose() {
@@ -82,12 +81,7 @@ func main() {
 		rl.EndDrawing()
 
 		select {
-		case <-tickSignal:
-			if len(ao.Aliens) > 0 {
-				ao.Step(ao.Aliens[counter%len(ao.Aliens)])
-				counter++
-			}
-		case <-keySignal:
+		case <-stepSignal:
 			if len(ao.Aliens) > 0 {
 				ao.Step(ao.Aliens[counter%len(ao.Aliens)])
 				counter++
