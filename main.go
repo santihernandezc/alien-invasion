@@ -15,7 +15,7 @@ import (
 
 var (
 	path     = flag.String("path", "config.json", "path to the json config file")
-	n        = flag.Int("n", 10, "number of aliens for the simulation")
+	n        = flag.Int("n", 5, "number of aliens for the simulation")
 	directed = flag.Bool("directed", false, "use a directed graph")
 )
 
