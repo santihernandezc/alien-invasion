@@ -31,5 +31,16 @@ func (a *Alien) move() (ok bool) {
 }
 
 func (a *Alien) Draw() {
+	// Modify position if needed
+	distance := rl.Vector2Distance(a.Position, a.NextPosition)
+	if distance != 0 {
+		if distance < 0.1 {
+			a.Position = a.NextPosition
+		} else {
+			a.Position = rl.Vector2Add(a.Position, rl.Vector2Scale(rl.Vector2Subtract(a.NextPosition, a.Position), 0.1))
+		}
+	}
+
+	// Draw
 	rl.DrawTexture(a.Texture, int32(a.Position.X)-a.Texture.Width/2, int32(a.Position.Y)-a.Texture.Height/2, rl.White)
 }

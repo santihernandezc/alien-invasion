@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"math/rand"
 	"os"
@@ -15,11 +14,9 @@ import (
 )
 
 var (
-	path      = flag.String("path", "config.json", "path to the json config file")
-	n         = flag.Int("n", 5, "number of aliens for the simulation")
-	movements = flag.Int("movements", 10000, "how many iterations this simulation is going to run")
-	directed  = flag.Bool("directed", false, "use a directed graph")
-	o         = flag.String("o", "", "path to the output file (optional)")
+	path     = flag.String("path", "config.json", "path to the json config file")
+	n        = flag.Int("n", 10, "number of aliens for the simulation")
+	directed = flag.Bool("directed", false, "use a directed graph")
 )
 
 func init() {
@@ -52,6 +49,11 @@ func main() {
 	alienTexture.Width = int32(float32(alienTexture.Width) * 0.2)
 	alienTexture.Height = int32(float32(alienTexture.Height) * 0.2)
 	rl.UnloadImage(alienImg)
+	explosionImg := rl.LoadImage("./assets/explosion.png")
+	explosionTexture := rl.LoadTextureFromImage(explosionImg)
+	explosionTexture.Width = int32(float32(explosionTexture.Width) * 0.1)
+	explosionTexture.Height = int32(float32(explosionTexture.Height) * 0.1)
+	rl.UnloadImage(explosionImg)
 
 	// Instantiate aliens and seed randomness
 	log.Printf("Initializing %d aliens", *n)
@@ -60,52 +62,71 @@ func main() {
 	if err != nil {
 		log.Fatalf("error creating aliens: %v", err)
 	}
+
 	var counter int
+
+	tickSignal := make(chan bool)
+	keySignal := make(chan bool)
+	go tick(tickSignal)
+	go listener(keySignal)
 
 	// Draw
 	for !rl.WindowShouldClose() {
 		rl.BeginDrawing()
 		rl.ClearBackground(rl.RayWhite)
-		rl.DrawText(fmt.Sprintf("%f", rl.GetFPS()), 10, 10, 20, rl.Black)
-		drawMap(worldMap)
+		drawMap(worldMap, explosionTexture)
 
 		for _, alien := range ao.Aliens {
-			if rl.Vector2Distance(alien.Position, alien.NextPosition) != 0 {
-				alien.Position = rl.Vector2Add(alien.Position, rl.Vector2Scale(rl.Vector2Subtract(alien.NextPosition, alien.Position), 0.1))
-			}
 			alien.Draw()
 		}
 		rl.EndDrawing()
 
-		if rl.IsKeyReleased(32) {
-			if len(ao.Aliens) >= 1 {
+		select {
+		case <-tickSignal:
+			if len(ao.Aliens) > 0 {
 				ao.Step(ao.Aliens[counter%len(ao.Aliens)])
 				counter++
 			}
+		case <-keySignal:
+			if len(ao.Aliens) > 0 {
+				ao.Step(ao.Aliens[counter%len(ao.Aliens)])
+				counter++
+			}
+		default:
+			continue
 		}
 	}
 
 	rl.UnloadTexture(alienTexture)
 	rl.CloseWindow()
-
-	// Start the simulation
-	// log.Printf("Unleashing %d aliens\n\n", *n)
-	// ao.UnleashAliens(*movements)
-
-	// worldString := worldMap.String()
-	// log.Print("Simulation done, this is what's left of the world...\n\n", worldString)
-
-	// if *o != "" {
-	// 	os.WriteFile(*o, []byte(worldMap.String()), 0777)
-	// }
 }
 
-func drawMap(worldMap *world.World) {
+func drawMap(worldMap *world.World, explosionTexture rl.Texture2D) {
+	for _, city := range worldMap.DestroyedCities {
+		rl.DrawText(city.Name, int32(city.Position.X)+10, int32(city.Position.Y)+10, 10, rl.Black)
+		rl.DrawTexture(explosionTexture, int32(city.Position.X)-10, int32(city.Position.Y)-10, rl.White)
+	}
+
 	for _, city := range worldMap.Cities {
 		rl.DrawText(city.Name, int32(city.Position.X)+10, int32(city.Position.Y)+10, 10, rl.Black)
 		rl.DrawCircleLines(int32(city.Position.X), int32(city.Position.Y), 10, rl.Black)
 		for _, neighbor := range city.Neighbors {
 			rl.DrawLine(int32(city.Position.X), int32(city.Position.Y), int32(neighbor.Position.X), int32(neighbor.Position.Y), rl.Gray)
 		}
+	}
+}
+
+func listener(c chan bool) {
+	for {
+		if rl.IsKeyReleased(32) {
+			c <- true
+		}
+	}
+}
+
+func tick(c chan bool) {
+	for {
+		c <- true
+		time.Sleep(1 * time.Second)
 	}
 }

@@ -11,8 +11,9 @@ import (
 
 // World is a graph with interconnected cities.
 type World struct {
-	Cities   map[string]*City
-	directed bool
+	Cities          map[string]*City
+	DestroyedCities []*City
+	directed        bool
 }
 
 type position struct {
@@ -102,6 +103,7 @@ func (w *World) addCityAndRoads(cityDef *cityDefinition, width int32, height int
 // DeleteCityAndRoads removes a city and all its edges from the World.
 func (w *World) DeleteCityAndRoads(city *City) {
 	// Delete City from the World's City map
+	w.DestroyedCities = append(w.DestroyedCities, city)
 	delete(w.Cities, city.Name)
 
 	// If it's not a directed graph, delete all roads to the city
