@@ -66,7 +66,7 @@ func main() {
 	var counter int
 
 	stepSignal := make(chan bool)
-	go tick(stepSignal)
+	// go tick(stepSignal)
 	go listener(stepSignal)
 
 	// Draw
@@ -118,9 +118,9 @@ func listener(c chan bool) {
 	}
 }
 
-func tick(c chan bool) {
-	for {
-		c <- true
-		time.Sleep(1 * time.Second)
-	}
-}
+// func tick(c chan bool) {
+// 	for {
+// 		c <- true
+// 		time.Sleep(1 * time.Second)
+// 	}
+// }

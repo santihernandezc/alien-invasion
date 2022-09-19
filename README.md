@@ -4,9 +4,15 @@
 
 Given a config file, this simulation generates a map with interconnected cities in which aliens will take turns to move from one place to another.
 
+![](assets/2022-09-19-18-17-12.png)
+
 On each turn, each alien will randomly pick a neighbor city and move there. If they find that other alien is already in that city, a fight will take place and both the aliens and the city will be destroyed as a result.
 
-When a city is destroyed, it is removed from the map, and so are any roads that lead into or out of it. Once a city is destroyed, aliens can no longer travel to or through it. This may lead to aliens getting "trapped".
+When a city is destroyed, it is removed from the map, and so are any roads that lead into or out of it.
+
+![](assets/2022-09-19-18-21-05.png)
+
+Once a city is destroyed, aliens can no longer travel to or through it. This may lead to aliens getting "trapped".
 
 The command line argument `n` determines how many aliens are generated and placed randomly on the map.
 
